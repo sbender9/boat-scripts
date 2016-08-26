@@ -28,7 +28,30 @@ I run these via the /etc/rc.local:
 
 - I have not decided how I will distribute this yet....
 
+#iPhone
+
 ![](http://i.imgur.com/gdWk9ys.png)
 
 ![](http://i.imgur.com/j5pd3ES.png)
 
+![](http://i.imgur.com/3r07Arr.png)
+
+##iPad
+
+![](http://i.imgur.com/5Os0GxO.png)
+
+![](http://i.imgur.com/Ii4kHBL.png)
+
+![](http://i.imgur.com/MdZ5sZo.png)
+
+![](http://i.imgur.com/BXDnnyc.png)
+
+![](http://i.imgur.com/JqDGUKX.png)
+
+![](http://i.imgur.com/MQJCsdr.png)
+
+##Apple Watch
+
+![](http://i.imgur.com/VtSCun6.png)
+
+![](http://i.imgur.com/z4V3F3S.png)
