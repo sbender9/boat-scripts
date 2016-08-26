@@ -36,11 +36,11 @@ I run these via the /etc/rc.local:
 
 ![](http://i.imgur.com/3r07Arr.png)
 
-##iPad
-
 ![](http://i.imgur.com/5Os0GxO.png)
 
 ![](http://i.imgur.com/Ii4kHBL.png)
+
+##iPad
 
 ![](http://i.imgur.com/MdZ5sZo.png)
 
