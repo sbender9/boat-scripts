@@ -18,6 +18,9 @@ Custom scripts that run on the raspberry pi on my 1980 Catalina 30 (Wilhelm)
 ## Execution
 
 I run these via the /etc/rc.local:
+
+```
 /home/sbender/source/canboat_http.py > /dev/null 2>&1 &
 /home/sbender/source/signalk_alert_pusher.py > /tmp/alerts.log 2>&1 &
+```
 
