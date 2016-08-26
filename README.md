@@ -50,6 +50,8 @@ I run these via the /etc/rc.local:
 
 ![](http://i.imgur.com/MQJCsdr.png)
 
+![](http://i.imgur.com/Z5yiOM0.png)
+
 ##Apple Watch
 
 ![](http://i.imgur.com/VtSCun6.png)
