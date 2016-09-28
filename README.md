@@ -24,36 +24,3 @@ I run these via the /etc/rc.local:
 /home/sbender/source/signalk_alert_pusher.py > /tmp/alerts.log 2>&1 &
 ```
 
-## My iOS App
-
-- I have not decided how I will distribute this yet....
-
-#iPhone
-
-![](http://i.imgur.com/gdWk9ys.png)
-
-![](http://i.imgur.com/j5pd3ES.png)
-
-![](http://i.imgur.com/3r07Arr.png)
-
-![](http://i.imgur.com/5Os0GxO.png)
-
-![](http://i.imgur.com/Ii4kHBL.png)
-
-![](http://i.imgur.com/MdZ5sZo.png)
-
-##iPad
-
-![](http://i.imgur.com/BXDnnyc.png)
-
-![](http://i.imgur.com/JqDGUKX.png)
-
-![](http://i.imgur.com/MQJCsdr.png)
-
-![](http://i.imgur.com/Z5yiOM0.png)
-
-##Apple Watch
-
-![](http://i.imgur.com/VtSCun6.png)
-
-![](http://i.imgur.com/z4V3F3S.png)
