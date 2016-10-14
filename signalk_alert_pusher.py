@@ -17,15 +17,6 @@ import push_server
 HOST='localhost'
 PORT=3000
 
-#device_tokens = [
-  #ipad
-#  '<8ec23e25 562c6438 662d7f7e d807f6fb 5d629129 d366093d f579107d 841e7232>',
-  #iphone
-#   '<a5064b7e ffab1d58 95f396c4 72f2c773 09dd8d5d 104241cf e4bfca5f fd321ac2>',
-  #tv
-#  '<2308c3d7 a32a2460 1f6b7e7a 36d76a08 56d5f7f4 b6fae44d 6f1d900b 0627c86d>'
-#    ]
-
 last_alarm_times = {}
 last_wind = None
 last_pitch = None
@@ -40,7 +31,7 @@ pitch_path = 'navigation.attitude.pitch'
 
 excesive_attitute_alarm = 5.0
 excesive_wind_alarm = 20.0
-high_wind_alarm = 15.0
+high_wind_alarm = 10.0
 shallow_depth_alarm = 8.0
 
 notification_data = {
@@ -58,7 +49,6 @@ notification_data = {
         'msg': 'A battery voltage is low. Starter bank is %0.2f. House bank is %0.2f'
         }
 }
-
 
 def meters_to_feet(val):
     return val * 3.28084
@@ -182,6 +172,8 @@ def check_for_alarms(vessel):
 
     #alarms = []
 
+    history = push_server.read_history()
+
     devices = push_server.read_devices()
     
     for alarm in alarms:
@@ -192,6 +184,8 @@ def check_for_alarms(vessel):
             if datetime.now() < hour_from:
                 continue
 
+        alarm['date'] = time.strftime('%m/%d %H:%M', time.localtime(time.time()))
+        history.append(alarm)
         
         for device in devices.values():
             push_to_amazon_sns(alarm['title'], alarm['body'],
@@ -202,8 +196,11 @@ def check_for_alarms(vessel):
         last_alarm_times[type] = datetime.now()
         print "%s - Alert: %s: %s" % (time.asctime(time.localtime(time.time())), alarm['title'], alarm['body'])
 
+    if len(history) > 100:
+        history = history[len(history)-100:]
 
-
+    push_server.save_history(history)
+    
 if __name__ == '__main__':
     while 1:
         try:
