@@ -9,27 +9,38 @@ from pprint import pprint
 from datetime import datetime, timedelta
 import httplib
 import traceback
+import math
+from  aws_push import push_to_amazon_sns
+import push_server
 
 #HOST='192.168.1.200'
 HOST='localhost'
 PORT=3000
 
-device_tokens = [
-  '<dfkjhdjsf sdfkjhhj dsfkhdsf ksdhfddsf dskfjhd sdfkhj dsfhkkj dsfkjhsd>',
-    ]
+#device_tokens = [
+  #ipad
+#  '<8ec23e25 562c6438 662d7f7e d807f6fb 5d629129 d366093d f579107d 841e7232>',
+  #iphone
+#   '<a5064b7e ffab1d58 95f396c4 72f2c773 09dd8d5d 104241cf e4bfca5f fd321ac2>',
+  #tv
+#  '<2308c3d7 a32a2460 1f6b7e7a 36d76a08 56d5f7f4 b6fae44d 6f1d900b 0627c86d>'
+#    ]
 
 last_alarm_times = {}
+last_wind = None
+last_pitch = None
+last_roll = None
 
 depth_path = 'environment.depth.belowTransducer.value'
 offset_path = 'environment.depth.surfaceToTransducer.value'
-battery_status_path = 'electrical.batteries.%d.capacity.stateOfCharge.value'
+battery_status_path = 'electrical.batteries.%d.voltage.value'
 wind_path = 'environment.wind.speedApparent.value'
 roll_path = 'navigation.attitude.roll'
 pitch_path = 'navigation.attitude.pitch'
 
-excesive_attitute_alarm = 3.0
+excesive_attitute_alarm = 5.0
 excesive_wind_alarm = 20.0
-high_wind_alarm = 10.0
+high_wind_alarm = 15.0
 shallow_depth_alarm = 8.0
 
 notification_data = {
@@ -42,8 +53,8 @@ notification_data = {
         'msg': 'The engine oil pressure is %s'
         },
     'lowSystemVoltage': {
-        'paths': [ 'electrical.batteries.0.capacity.stateOfCharge.value',
-                   'electrical.batteries.1.capacity.stateOfCharge.value' ],
+        'paths': [ 'electrical.batteries.0.voltage.value',
+                   'electrical.batteries.1.voltage.value' ],
         'msg': 'A battery voltage is low. Starter bank is %0.2f. House bank is %0.2f'
         }
 }
@@ -93,9 +104,11 @@ def check_depth(vessel):
     return []
 
 def check_wind(vessel):
+    global last_wind
     speed = get_from_path(wind_path, vessel)
     kspeed = ms_to_knots(speed)
     #print 'wind', kspeed
+    last_wind = kspeed
     if kspeed > excesive_wind_alarm:
         return [make_alarm('Excessive Wind', 'Wind Speed is %0.2f kts' 
                            % kspeed, 'excessive_wind')]
@@ -105,9 +118,15 @@ def check_wind(vessel):
     return []
 
 def check_attitude(vessel):
+    global last_pitch, last_roll
     roll = get_from_path(roll_path, vessel)
     pitch = get_from_path(pitch_path, vessel)
 
+    roll = math.degrees(roll)
+    pitch = math.degrees(pitch)
+    
+    last_pitch = pitch
+    last_roll = roll
     #print 'attitude', pitch, roll
     alarms = []
 
@@ -130,19 +149,21 @@ def check_for_notifications(vessel):
             #print notifications
             for key in notifications.keys():
                 #pprint(notifications[key])
-                msg = notifications[key]['message']
-                alarm = make_alarm(msg, msg, key)
 
-                if notification_data.has_key(key):
-                    nd = notification_data[key]
-                    paths = nd['paths']
-                    vals = ()
-                    for path in paths:
-                        vals = vals + (get_from_path(path, vessel),)
+                if notifications[key]['state'] != 'normal':
+                    msg = notifications[key]['message']
+                    alarm = make_alarm(msg, msg, key)
+                    if notification_data.has_key(key):
+                        nd = notification_data[key]
+                        paths = nd['paths']
+                        vals = ()
+                        for path in paths:
+                            print get_from_path(path, vessel)
+                            vals = vals + (get_from_path(path, vessel),)
 
-                    alarm['body'] = nd['msg'] % vals
+                        alarm['body'] = nd['msg'] % vals
 
-                alarms.append(alarm)
+                    alarms.append(alarm)
 
     return alarms
 
@@ -157,6 +178,12 @@ def check_for_alarms(vessel):
 
     alarms.extend(check_attitude(vessel))
 
+    print "%s - Wind: %0.2f Pitch: %0.2f Roll: %0.2f" % (time.asctime(time.localtime(time.time())), last_wind, last_pitch, last_roll)
+
+    #alarms = []
+
+    devices = push_server.read_devices()
+    
     for alarm in alarms:
         type = alarm['type']
         if last_alarm_times.has_key(type):
@@ -165,15 +192,16 @@ def check_for_alarms(vessel):
             if datetime.now() < hour_from:
                 continue
 
-        for token in device_tokens:
-            command = ['ruby', 'push.rb', '--title', alarm['title'], 
-                       '--body', alarm['body'], '--token', token]
-            call(command)
-            #print command
+        
+        for device in devices.values():
+            push_to_amazon_sns(alarm['title'], alarm['body'],
+                               device['targetArn'], 'us-east-1',
+                               device['accessKey'],
+                               device['secretAccessKey'])
 
         last_alarm_times[type] = datetime.now()
-        print time.asctime(time.localtime(time.time()))
-        pprint(alarm)
+        print "%s - Alert: %s: %s" % (time.asctime(time.localtime(time.time())), alarm['title'], alarm['body'])
+
 
 
 if __name__ == '__main__':
