@@ -7,10 +7,29 @@ import json
 from pprint import pprint
 from urlparse import urlparse, parse_qs
 
+#example registration json
+# {
+#     "accessKey": "KEY", 
+#     "deviceName": "Scott Bender's iPhone 6", 
+# "secretAccessKey": "SECRET", 
+#     "targetArn": "arn:aws:sns:us-east-1:1234:endpoint/APNS_SANDBOX/NOT_A_REAL_ARN"
+# }
 
-HOST_NAME = '' # !!!REMEMBER TO CHANGE THIS!!!
+HOST_NAME = ''
 PORT_NUMBER = 3120 
 devices_file = '/home/sbender/source/registerd_devices.json'
+history_file = '/home/sbender/source/alarm_history.json'
+
+def read_history():
+    f = open(history_file)
+    dict = json.loads(f.read())
+    f.close()
+    return dict
+
+def save_history(history):
+    f = open(history_file, "w")
+    f.write(json.dumps(history, sort_keys=True, indent=2))
+    f.close()
 
 def read_devices():
     f = open(devices_file)
@@ -35,6 +54,12 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.send_response(200)
             #s.send_header("Content-type", "text/json")
             s.end_headers()
+        elif s.path == '/get_history':
+            history = read_history()
+            s.send_response(200)
+            s.send_header("Content-type", "text/json")
+            s.end_headers()
+            s.wfile.write(json.dumps(history))
         else:
             s.send_response(404)
             s.end_headers()
@@ -44,7 +69,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             data = s.rfile.read(int(s.headers['Content-Length']))
             dict = json.loads(data)
             devices = read_devices()
-            devices[dict['id']] = dict
+            devices[dict['targetArn']] = dict
             save_devices(devices)
             s.send_response(200)
             s.end_headers()
@@ -52,11 +77,20 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             data = s.rfile.read(int(s.headers['Content-Length']))
             dict = json.loads(data)
             devices = read_devices()
-            if devices.has_key(dict['id']):
-                del devices[dict['id']]
+            if devices.has_key(dict['targetArn']):
+                del devices[dict['targetArn']]
             save_devices(devices)
             s.send_response(200)
-            s.end_headers()            
+            s.end_headers()
+        elif s.path == '/device_exists':
+            data = s.rfile.read(int(s.headers['Content-Length']))
+            dict = json.loads(data)
+            devices = read_devices()
+            if devices.has_key(dict['targetArn']):
+                s.send_response(200)
+            else:
+                s.send_response(404)
+            s.end_headers()
         else:
             s.send_response(404)
             s.end_headers()                                                
