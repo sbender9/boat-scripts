@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(description='WilhelmSK Server')
 parser.add_argument('--dst', action='store', dest='dst',
                       help='airmar device id',required=True)
 parser.add_argument('--value', action='store', dest='value',
-                    help='trnasducer offset',required=True,type=float)  
+                    help='transducer offset',required=True,type=float)  
 
 args = parser.parse_args()
   
